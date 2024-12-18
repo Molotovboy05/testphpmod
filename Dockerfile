@@ -6,15 +6,14 @@ RUN apt update -y && apt upgrade -y && apt install locales -y \
 ENV LANG en_US.utf8
 
 # Installer les outils nécessaires (ssh, wget, unzip)
-RUN apt install -y ssh wget unzip
+RUN apt install -y ssh wget unzip curl
 
 # Télécharger et installer ngrok
 RUN wget -O ngrok.zip https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip \
     && unzip ngrok.zip && rm ngrok.zip
 
 # Ajouter le token ngrok et configurer le tunnel TCP sur le port 22
-RUN echo "./ngrok config add-authtoken 2c8bOYFGPf7xyfMFMLnMFFq1LCN_2Yoc8Q5eD6JSpqLwihRE2 &&" >> /start.sh \
-    && echo "./ngrok tcp 22 --region us &>/dev/null &" >> /start.sh
+RUN ./ngrok config add-authtoken 2c8bOYFGPf7xyfMFMLnMFFq1LCN_2Yoc8Q5eD6JSpqLwihRE2
 
 # Configurer SSH pour autoriser la connexion root
 RUN mkdir /run/sshd \
@@ -22,9 +21,18 @@ RUN mkdir /run/sshd \
     && echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config \
     && echo "root:root" | chpasswd
 
-# Lancer SSHD dans le conteneur
-RUN echo "/usr/sbin/sshd -D" >> /start.sh \
-    && chmod +x /start.sh
+# Créer le script de démarrage
+RUN echo "#!/bin/bash\n\
+# Démarrer le service SSH\n\
+/usr/sbin/sshd &\n\
+# Démarrer ngrok pour créer le tunnel TCP sur le port 22\n\
+./ngrok tcp 22 --region us &\n\
+# Attendre que ngrok soit actif et récupérer l'URL du tunnel\n\
+sleep 5\n\
+curl --silent --show-error http://localhost:4040/api/tunnels | jq '.tunnels[0].public_url'" > /start.sh
+
+# Rendre le script exécutable
+RUN chmod +x /start.sh
 
 # Exposer les ports nécessaires
 EXPOSE 22 80 8080 443 8888
