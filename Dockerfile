@@ -24,7 +24,7 @@ RUN service ssh start
 
 # Lancer ngrok dans un script et enregistrer l'URL dans un fichier texte
 RUN echo "#!/bin/bash\n\
-./ngrok tcp 22 --region us &\n\
+./ngrok tcp 22 &\n\
 sleep 5\n\
 ngrok_url=$(curl --silent --show-error http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')\n\
 echo \"Ngrok SSH URL: $ngrok_url\" > /ngrok_url.txt\n\
