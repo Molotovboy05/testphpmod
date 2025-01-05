@@ -22,13 +22,11 @@ RUN mkdir /run/sshd \
     && echo "root:root" | chpasswd
 
 # Créer le script de démarrage
-RUN echo "#!/bin/bash\n\
-# Démarrer le service SSH\n\
+RUN echo '#!/bin/bash\n\
 /usr/sbin/sshd &\n\
-# Démarrer ngrok pour créer le tunnel TCP sur le port 22\n\
 ./ngrok tcp 22 --region us &\n\
-# Attendre que ngrok soit actif et récupérer l'URL du tunnel\n\
 sleep 5\n\
+tail -f /dev/null' > /start.sh
 
 # Rendre le script exécutable
 RUN chmod +x /start.sh
