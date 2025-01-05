@@ -29,7 +29,6 @@ RUN echo "#!/bin/bash\n\
 ./ngrok tcp 22 --region us &\n\
 # Attendre que ngrok soit actif et récupérer l'URL du tunnel\n\
 sleep 5\n\
-curl --silent --show-error http://localhost:4040/api/tunnels | jq '.tunnels[0].public_url'" > /start.sh
 
 # Rendre le script exécutable
 RUN chmod +x /start.sh
